@@ -45,6 +45,7 @@ model SkillNode {
   minScoreRequired Float            @default(0.7)
   isPractical      Boolean          @default(false)
   validityMonths   Int?
+  category         String
   
   parents          SkillNode[]      @relation("SkillDependencies")
   children         SkillNode[]      @relation("SkillDependencies")
