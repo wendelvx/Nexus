@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import authRoutes from './routes/authRoutes.js';
+import leaderboardRoutes from './routes/leaderboardRoutes.js';
 
 import skillRoutes from './routes/skillRoutes.js';
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use('/skills', skillRoutes);
 app.use('/auth', authRoutes);
+app.use('/leaderboard', leaderboardRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
