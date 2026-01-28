@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLAYER
+  DUNGEON_MASTER
+  GAME_MASTER
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id               String           @id @default(uuid())
+  email            String           @unique
+  name             String
+  role             Role             @default(PLAYER)
+  department       String?
+  level            Int              @default(1)
+  xp               Int              @default(0)
+  progress         UserProgress[]
+  moduleProgress   UserModuleProgress[]
+  earnedBadges     UserBadge[]
+  submissions      TaskSubmission[]
+  managedSubmissions TaskSubmission[] @relation("ManagerReview")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model SkillNode {
+  id               String           @id @default(uuid())
+  title            String
+  description      String
+  xpReward         Int              @default(100)
+  minScoreRequired Float            @default(0.7)
+  isPractical      Boolean          @default(false)
+  validityMonths   Int?
+  
+  parents          SkillNode[]      @relation("SkillDependencies")
+  children         SkillNode[]      @relation("SkillDependencies")
+
+  modules          Module[]
+  badges           Badge[]
+  userProgress     UserProgress[]
+}
+
+model Module {
+  id               String           @id @default(uuid())
+  title            String
+  content          String
+  contentType      String           @default("TEXT")
+  order            Int
+  skillNodeId      String
+  skillNode        SkillNode        @relation(fields: [skillNodeId], references: [id])
+  quizzes          Quiz[]
+  userProgress     UserModuleProgress[]
+}
+
+model Quiz {
+  id               String           @id @default(uuid())
+  title            String
+  moduleId         String
+  module           Module           @relation(fields: [moduleId], references: [id])
+  questions        Question[]
+}
+
+model Question {
+  id               String           @id @default(uuid())
+  text             String
+  quizId           String
+  quiz             Quiz             @relation(fields: [quizId], references: [id])
+  options          Option[]
+}
+
+model Option {
+  id               String           @id @default(uuid())
+  text             String
+  isCorrect        Boolean          @default(false)
+  questionId       String
+  question         Question         @relation(fields: [questionId], references: [id])
+}
+
+model TaskSubmission {
+  id               String           @id @default(uuid())
+  userId           String
+  skillNodeId      String
+  evidenceUrl      String
+  feedback         String?
+  status           SubmissionStatus @default(PENDING)
+  reviewedById     String?
+  createdAt        DateTime         @default(now())
+  
+  user             User             @relation(fields: [userId], references: [id])
+  reviewedBy       User?            @relation("ManagerReview", fields: [reviewedById], references: [id])
+}
+
+model UserProgress {
+  id               String           @id @default(uuid())
+  userId           String
+  skillNodeId      String
+  status           Float            @default(0)
+  isCompleted      Boolean          @default(false)
+  completedAt      DateTime?
+  expiresAt        DateTime?
+
+  user             User             @relation(fields: [userId], references: [id])
+  skillNode        SkillNode        @relation(fields: [skillNodeId], references: [id])
+
+  @@unique([userId, skillNodeId])
+}
+
+model UserModuleProgress {
+  id               String           @id @default(uuid())
+  userId           String
+  moduleId         String
+  isCompleted      Boolean          @default(false)
+  completedAt      DateTime?
+
+  user             User             @relation(fields: [userId], references: [id])
+  module           Module           @relation(fields: [moduleId], references: [id])
+
+  @@unique([userId, moduleId])
+}
+
+model Badge {
+  id               String           @id @default(uuid())
+  name             String
+  icon             String
+  skillNodeId      String?
+  skillNode        SkillNode?       @relation(fields: [skillNodeId], references: [id])
+  users            UserBadge[]
+}
+
+model UserBadge {
+  id               String           @id @default(uuid())
+  userId           String
+  badgeId          String
+  earnedAt         DateTime         @default(now())
+
+  user             User             @relation(fields: [userId], references: [id])
+  badge            Badge            @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+}
