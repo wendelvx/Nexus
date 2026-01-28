@@ -13,6 +13,7 @@ async function main() {
       email: 'mestre@nexus.com',
       name: 'Grande Mestre das Guildas',
       role: 'GAME_MASTER',
+      password:'123456'
     },
   });
 
