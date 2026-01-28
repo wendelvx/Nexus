@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import './workers/xpWorker.js';
 import skillRoutes from './routes/skillRoutes.js';
+import submissionRoutes from './routes/submissionRoutes.js';
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/skills', skillRoutes);
 app.use('/auth', authRoutes);
 app.use('/leaderboard', leaderboardRoutes);
+app.use('/submissions', submissionRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
