@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import authRoutes from './routes/authRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
-
+import './workers/xpWorker.js';
 import skillRoutes from './routes/skillRoutes.js';
 
 const app = express();
@@ -12,6 +12,7 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
 
 app.use('/skills', skillRoutes);
 app.use('/auth', authRoutes);
