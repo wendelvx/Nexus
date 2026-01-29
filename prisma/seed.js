@@ -1,94 +1,158 @@
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Iniciando Seed');
+  console.log('🧹 Limpando banco de dados...');
+  await prisma.userBadge.deleteMany();
+  await prisma.userModuleProgress.deleteMany();
+  await prisma.userProgress.deleteMany();
+  await prisma.taskSubmission.deleteMany();
+  await prisma.option.deleteMany();
+  await prisma.question.deleteMany();
+  await prisma.quiz.deleteMany();
+  await prisma.module.deleteMany();
+  await prisma.badge.deleteMany();
+  await prisma.skillNode.deleteMany();
+  await prisma.user.deleteMany();
 
-  
+  console.log('🔐 Criando usuários (Personas)...');
+  const passwordHash = await bcrypt.hash('nexus123', 10);
 
-  const gm = await prisma.user.upsert({
-    where: { email: 'mestre@nexus.com' },
-    update: {},
-    create: {
-      email: 'mestre@nexus.com',
-      name: 'Grande Mestre das Guildas',
+  // Criando o Game Master (Admin)
+  await prisma.user.create({
+    data: {
+      email: 'gm@nexus.com',
+      name: 'Mestre Supremo',
       role: 'GAME_MASTER',
-      password:'123456'
-    },
+      password: passwordHash,
+      department: 'Board'
+    }
   });
 
+  // Criando um Dungeon Master (Gestor/Instrutor)
+  const dm = await prisma.user.create({
+    data: {
+      email: 'dm@nexus.com',
+      name: 'Instrutor Kaio',
+      role: 'DUNGEON_MASTER',
+      password: passwordHash,
+      department: 'Tecnologia'
+    }
+  });
+
+  // Criando um Player de teste
+  await prisma.user.create({
+    data: {
+      email: 'player@nexus.com',
+      name: 'Recruta Dev',
+      role: 'PLAYER',
+      password: passwordHash,
+      department: 'Desenvolvimento'
+    }
+  });
+
+  console.log('🌲 Plantando a Skill Tree...');
+
+  // 1. Nível Base (HTML)
   const nodeHtml = await prisma.skillNode.create({
     data: {
       title: 'Pergaminhos do HTML',
-      description: 'A base de toda a arquitetura web.',
-      xpReward: 100,
+      description: 'Domine a estrutura fundamental da web.',
+      category: 'Frontend',
+      xpReward: 150,
       modules: {
         create: [
-          { 
-            title: 'Estrutura Semântica', 
-            content: 'https://video.link/html1', 
-            order: 1,
-            contentType: 'VIDEO'
-          },
+          {
+            title: 'Introdução à Semântica',
+            content: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+            contentType: 'VIDEO',
+            order: 1
+          }
         ]
       },
       badges: {
-        create: [
-          { name: 'Arquiteto de Estruturas', icon: 'castle-icon' }
-        ]
+        create: { name: 'Estruturador de Mundos', icon: 'layout' }
       }
     }
   });
 
+  // 2. Nível Dependente (JavaScript - Quiz)
   const nodeJs = await prisma.skillNode.create({
     data: {
-      title: 'Alquimia do JavaScript',
-      description: 'Transforme páginas estáticas em ouro interativo.',
-      xpReward: 250,
+      title: 'Alquimia do JS',
+      description: 'Dê vida aos seus elementos com lógica.',
+      category: 'Frontend',
+      xpReward: 300,
+      minScoreRequired: 0.8,
       parents: { connect: { id: nodeHtml.id } },
       modules: {
         create: [
-          { 
-            title: 'Variáveis e Constantes', 
-            content: 'https://video.link/js1', 
+          {
+            title: 'Lógica de Programação',
+            content: 'Variáveis, Loops e Funções no JS.',
+            contentType: 'TEXT',
             order: 1,
             quizzes: {
-              create: [
-                {
-                  title: 'Desafio do Alquimista',
-                  questions: {
-                    create: [
-                      {
-                        text: 'Qual palavra-chave cria uma variável imutável?',
-                        options: {
-                          create: [
-                            { text: 'let', isCorrect: false },
-                            { text: 'var', isCorrect: false },
-                            { text: 'const', isCorrect: true },
-                          ]
-                        }
-                      }
-                    ]
+              create: {
+                title: 'O Desafio do Oráculo',
+                questions: {
+                  create: {
+                    text: 'Qual método é usado para adicionar um item ao final de um array?',
+                    options: {
+                      create: [
+                        { text: 'push()', isCorrect: true },
+                        { text: 'pop()', isCorrect: false },
+                        { text: 'shift()', isCorrect: false }
+                      ]
+                    }
                   }
                 }
-              ]
+              }
             }
-          },
+          }
         ]
+      },
+      badges: {
+        create: { name: 'Mago das Variáveis', icon: 'zap' }
       }
     }
   });
 
-  console.log('Nexus populado com Sucesso!');
+  // 3. Missão Prática (Side Quest) - Exige aprovação do DM
+  await prisma.skillNode.create({
+    data: {
+      title: 'O Grande Deploy',
+      description: 'Suba um projeto real para o servidor e envie o link.',
+      category: 'DevOps',
+      xpReward: 500,
+      isPractical: true,
+      validityMonths: 6, // Expira em 6 meses (testar reciclagem)
+      parents: { connect: { id: nodeJs.id } },
+      badges: {
+        create: { name: 'Lendário do Deploy', icon: 'ship' }
+      }
+    }
+  });
+
+  console.log(`
+🚀 Seed concluído com sucesso!
+---
+Contas de Acesso (Senha: nexus123):
+- Admin: gm@nexus.com
+- Gestor: dm@nexus.com
+- Player: player@nexus.com
+---
+A árvore possui 3 níveis (HTML -> JS -> Deploy Prático).
+  `);
 }
 
-
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
+  .catch((e) => {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
   });
