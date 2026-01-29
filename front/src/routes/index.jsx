@@ -4,6 +4,7 @@ import Dashboard from '../pages/Dashboard';
 import { PrivateRoute } from './PrivateRoute';
 import MainLayout from '../components/MainLayout';
 import QuizPage from '../pages/QuizPage'; 
+import Profile from '../pages/Profile'; 
 
 export default function AppRoutes() {
     return (
@@ -40,6 +41,17 @@ export default function AppRoutes() {
                     </PrivateRoute>
                 }
             />
+
+            <Route 
+  path="/profile" 
+  element={
+    <PrivateRoute>
+      <MainLayout>
+        <Profile />
+      </MainLayout>
+    </PrivateRoute>
+  } 
+/>
 
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
