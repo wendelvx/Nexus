@@ -73,6 +73,16 @@ export default function Header() {
           >
             <User className="w-4 h-4" /> FICHA
           </Link>
+          <Link 
+    to="/leaderboard" 
+    className={`flex items-center gap-2 px-5 py-2 rounded-lg text-[10px] font-black tracking-widest transition-all ${
+      location.pathname === '/leaderboard' 
+        ? 'bg-nexus-gold text-black shadow-glow-gold' 
+        : 'text-slate-500 hover:text-white'
+    }`}
+  >
+    <Trophy className="w-4 h-4" /> HALL
+  </Link>
         </nav>
 
         {/* LADO DIREITO: Stats e Logout */}

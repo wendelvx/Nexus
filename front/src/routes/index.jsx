@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from '../pages/Login';
-import Dashboard from '../pages/Dashboard'; 
+import Dashboard from '../pages/Dashboard';
 import { PrivateRoute } from './PrivateRoute';
 import MainLayout from '../components/MainLayout';
-import QuizPage from '../pages/QuizPage'; 
-import Profile from '../pages/Profile'; 
+import QuizPage from '../pages/QuizPage';
+import Profile from '../pages/Profile';
+import Leaderboard from '../pages/Leaderboard';
 
 export default function AppRoutes() {
     return (
@@ -42,16 +43,21 @@ export default function AppRoutes() {
                 }
             />
 
+            <Route
+                path="/profile"
+                element={
+                    <PrivateRoute>
+                        <MainLayout>
+                            <Profile />
+                        </MainLayout>
+                    </PrivateRoute>
+                }
+            />
+
             <Route 
-  path="/profile" 
-  element={
-    <PrivateRoute>
-      <MainLayout>
-        <Profile />
-      </MainLayout>
-    </PrivateRoute>
-  } 
-/>
+        path="/leaderboard" 
+        element={<PrivateRoute><MainLayout><Leaderboard /></MainLayout></PrivateRoute>} 
+      />
 
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
