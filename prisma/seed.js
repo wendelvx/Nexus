@@ -4,155 +4,150 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🧹 Limpando banco de dados...');
-  await prisma.userBadge.deleteMany();
-  await prisma.userModuleProgress.deleteMany();
-  await prisma.userProgress.deleteMany();
-  await prisma.taskSubmission.deleteMany();
-  await prisma.option.deleteMany();
-  await prisma.question.deleteMany();
-  await prisma.quiz.deleteMany();
-  await prisma.module.deleteMany();
-  await prisma.badge.deleteMany();
-  await prisma.skillNode.deleteMany();
-  await prisma.user.deleteMany();
+  console.log('🧹 Limpando as masmorras (Resetando Banco)...');
+  const deleteOrder = [
+    prisma.userBadge, prisma.userModuleProgress, prisma.userProgress,
+    prisma.taskSubmission, prisma.option, prisma.question,
+    prisma.quiz, prisma.module, prisma.badge, prisma.skillNode, prisma.user
+  ];
+  for (const table of deleteOrder) await table.deleteMany();
 
-  console.log('🔐 Criando usuários (Personas)...');
-  const passwordHash = await bcrypt.hash('nexus123', 10);
+  const hash = await bcrypt.hash('nexus123', 10);
 
-  // Criando o Game Master (Admin)
+  console.log('👥 Criando Personas...');
+  const player = await prisma.user.create({
+    data: { email: 'player@nexus.com', name: 'Recruta Zero', role: 'PLAYER', password: hash, department: 'Engenharia' }
+  });
   await prisma.user.create({
-    data: {
-      email: 'gm@nexus.com',
-      name: 'Mestre Supremo',
-      role: 'GAME_MASTER',
-      password: passwordHash,
-      department: 'Board'
-    }
+    data: { email: 'dm@nexus.com', name: 'Mestre Ancião', role: 'DUNGEON_MASTER', password: hash }
   });
 
-  // Criando um Dungeon Master (Gestor/Instrutor)
-  const dm = await prisma.user.create({
-    data: {
-      email: 'dm@nexus.com',
-      name: 'Instrutor Kaio',
-      role: 'DUNGEON_MASTER',
-      password: passwordHash,
-      department: 'Tecnologia'
-    }
-  });
+  console.log('🌲 Construindo a Árvore de Habilidades...');
 
-  // Criando um Player de teste
-  await prisma.user.create({
-    data: {
-      email: 'player@nexus.com',
-      name: 'Recruta Dev',
-      role: 'PLAYER',
-      password: passwordHash,
-      department: 'Desenvolvimento'
-    }
-  });
-
-  console.log('🌲 Plantando a Skill Tree...');
-
-  // 1. Nível Base (HTML)
-  const nodeHtml = await prisma.skillNode.create({
+  // --- NÍVEL 1: FUNDAMENTOS ---
+  const htmlNode = await prisma.skillNode.create({
     data: {
       title: 'Pergaminhos do HTML',
-      description: 'Domine a estrutura fundamental da web.',
+      description: 'A fundação de toda estrutura web.',
       category: 'Frontend',
-      xpReward: 150,
+      xpReward: 200,
       modules: {
-        create: [
-          {
-            title: 'Introdução à Semântica',
-            content: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-            contentType: 'VIDEO',
-            order: 1
-          }
-        ]
-      },
-      badges: {
-        create: { name: 'Estruturador de Mundos', icon: 'layout' }
-      }
-    }
-  });
-
-  // 2. Nível Dependente (JavaScript - Quiz)
-  const nodeJs = await prisma.skillNode.create({
-    data: {
-      title: 'Alquimia do JS',
-      description: 'Dê vida aos seus elementos com lógica.',
-      category: 'Frontend',
-      xpReward: 300,
-      minScoreRequired: 0.8,
-      parents: { connect: { id: nodeHtml.id } },
-      modules: {
-        create: [
-          {
-            title: 'Lógica de Programação',
-            content: 'Variáveis, Loops e Funções no JS.',
-            contentType: 'TEXT',
-            order: 1,
-            quizzes: {
-              create: {
-                title: 'O Desafio do Oráculo',
-                questions: {
-                  create: {
-                    text: 'Qual método é usado para adicionar um item ao final de um array?',
-                    options: {
-                      create: [
-                        { text: 'push()', isCorrect: true },
-                        { text: 'pop()', isCorrect: false },
-                        { text: 'shift()', isCorrect: false }
-                      ]
-                    }
+        create: {
+          title: 'Semântica e Estrutura',
+          content: 'Conteúdo sobre tags semânticas...',
+          contentType: 'TEXT',
+          order: 1,
+          quizzes: {
+            create: {
+              title: 'O Teste do Arquiteto',
+              questions: {
+                create: {
+                  text: 'Qual tag é usada para o conteúdo principal da página?',
+                  options: {
+                    create: [
+                      { text: '<main>', isCorrect: true },
+                      { text: '<section>', isCorrect: false },
+                      { text: '<div>', isCorrect: false }
+                    ]
                   }
                 }
               }
             }
           }
-        ]
+        }
       },
-      badges: {
-        create: { name: 'Mago das Variáveis', icon: 'zap' }
+      badges: { create: { name: 'Estruturador Especialista', icon: 'layout' } }
+    }
+  });
+
+  // --- NÍVEL 2: ESTILIZAÇÃO (Depende de HTML) ---
+  const cssNode = await prisma.skillNode.create({
+    data: {
+      title: 'Magia do CSS',
+      description: 'Transforme esqueletos em interfaces vívidas.',
+      category: 'Frontend',
+      xpReward: 300,
+      parents: { connect: { id: htmlNode.id } },
+      modules: {
+        create: {
+          title: 'Flexbox e Grid',
+          content: 'Dominando o layout responsivo.',
+          contentType: 'VIDEO',
+          order: 1,
+          quizzes: {
+            create: {
+              title: 'Desafio do Estilista',
+              questions: {
+                create: {
+                  text: 'Qual propriedade ativa o Flexbox?',
+                  options: {
+                    create: [
+                      { text: 'display: flex', isCorrect: true },
+                      { text: 'position: absolute', isCorrect: false },
+                      { text: 'float: left', isCorrect: false }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      badges: { create: { name: 'Mago das Cores', icon: 'palette' } }
+    }
+  });
+
+  // --- NÍVEL 3: LÓGICA (Depende de CSS) ---
+  const jsNode = await prisma.skillNode.create({
+    data: {
+      title: 'Alquimia do JavaScript',
+      description: 'Manipule o tempo e o espaço com lógica pura.',
+      category: 'Frontend',
+      xpReward: 500,
+      parents: { connect: { id: cssNode.id } },
+      modules: {
+        create: {
+          title: 'Manipulação de DOM',
+          content: 'Interagindo com o usuário.',
+          contentType: 'TEXT',
+          order: 1,
+          quizzes: {
+            create: {
+              title: 'O Enigma do Código',
+              questions: {
+                create: [
+                  {
+                    text: 'Como selecionamos um elemento pelo ID?',
+                    options: {
+                      create: [
+                        { text: 'getElementById()', isCorrect: true },
+                        { text: 'querySelector()', isCorrect: false }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
       }
     }
   });
 
-  // 3. Missão Prática (Side Quest) - Exige aprovação do DM
+  // --- NÍVEL FINAL: MISSÃO PRÁTICA ---
   await prisma.skillNode.create({
     data: {
-      title: 'O Grande Deploy',
-      description: 'Suba um projeto real para o servidor e envie o link.',
-      category: 'DevOps',
-      xpReward: 500,
+      title: 'O Grande Lançamento',
+      description: 'Envie o link do seu portfólio para avaliação do Mestre.',
+      category: 'Carreira',
+      xpReward: 1000,
       isPractical: true,
-      validityMonths: 6, // Expira em 6 meses (testar reciclagem)
-      parents: { connect: { id: nodeJs.id } },
-      badges: {
-        create: { name: 'Lendário do Deploy', icon: 'ship' }
-      }
+      parents: { connect: { id: jsNode.id } },
+      badges: { create: { name: 'Lendário da Web', icon: 'award' } }
     }
   });
 
-  console.log(`
-🚀 Seed concluído com sucesso!
----
-Contas de Acesso (Senha: nexus123):
-- Admin: gm@nexus.com
-- Gestor: dm@nexus.com
-- Player: player@nexus.com
----
-A árvore possui 3 níveis (HTML -> JS -> Deploy Prático).
-  `);
+  console.log('✅ Mundo do Nexus RPG populado!');
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch(e => { console.error(e); process.exit(1); }).finally(() => prisma.$disconnect());
