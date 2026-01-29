@@ -31,18 +31,49 @@ export const submitQuiz = async (req, res) => {
     const score = correctAnswers / totalQuestions;
     const minRequired = quiz.module.skillNode.minScoreRequired || 0.7;
     const passed = score >= minRequired;
+    const xpEarned = quiz.module.skillNode.xpReward;
 
     if (passed) {
-      await xpQueue.add('process-xp', {
-        userId,
-        amount: quiz.module.skillNode.xpReward,
-        skillNodeId: quiz.module.skillNode.id
-      });
-      
+      let expiresAt = null;
+      if (quiz.module.skillNode.validityMonths) {
+        const date = new Date();
+        date.setMonth(date.getMonth() + quiz.module.skillNode.validityMonths);
+        expiresAt = date;
+      }
+
       await prisma.userModuleProgress.upsert({
         where: { userId_moduleId: { userId, moduleId: quiz.moduleId } },
         update: { isCompleted: true, completedAt: new Date() },
         create: { userId, moduleId: quiz.moduleId, isCompleted: true, completedAt: new Date() }
+      });
+
+      await prisma.userProgress.upsert({
+        where: { 
+          userId_skillNodeId: { 
+            userId, 
+            skillNodeId: quiz.module.skillNodeId 
+          } 
+        },
+        update: { 
+          isCompleted: true, 
+          completedAt: new Date(),
+          status: 1.0,
+          expiresAt
+        },
+        create: { 
+          userId, 
+          skillNodeId: quiz.module.skillNodeId, 
+          isCompleted: true, 
+          completedAt: new Date(),
+          status: 1.0,
+          expiresAt
+        }
+      });
+
+      await xpQueue.add('process-xp', {
+        userId,
+        amount: xpEarned,
+        skillNodeId: quiz.module.skillNodeId
       });
     }
 
@@ -51,13 +82,14 @@ export const submitQuiz = async (req, res) => {
       score: score * 100,
       correctAnswers,
       totalQuestions,
+      xpEarned: passed ? xpEarned : 0, 
       message: passed 
-        ? "Excelente! Você dominou este conhecimento." 
-        : "Nota insuficiente. Estude o material e tente novamente!"
+        ? "Excelente! Você dominou este conhecimento e subiu um degrau na sua jornada." 
+        : "Nota insuficiente para este desafio. Estude o material e tente novamente, recruta!"
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Erro no QuizController:", error);
     res.status(500).json({ error: "Erro ao processar o Quiz" });
   }
 };
