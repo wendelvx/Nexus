@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+@theme {
+  --color-nexus-dark: #05070a;
+  --color-nexus-card: #0f172a;
+  --color-nexus-gold: #fbbf24;
+  --color-nexus-purple: #8b5cf6;
+  --color-nexus-emerald: #10b981;
+  --color-nexus-border: #1e293b;
+
+  --shadow-glow-gold: 0 0 15px rgba(251, 191, 36, 0.3);
+  --shadow-glow-purple: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+@layer base {
+  body {
+    @apply bg-nexus-dark text-slate-100 antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
